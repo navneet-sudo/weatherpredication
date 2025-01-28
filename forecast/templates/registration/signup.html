@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        /* Basic reset and full-page background setup */
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url("{% static 'images.jpg' %}"); /* Add your background image */
+            background-size: cover; /* Ensure the image covers the entire background */
+            background-position: center; /* Center the image */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Sign-up form container */
+        .auth-form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+
+        /* Form heading styling */
+        .auth-form h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Flex styling for the form */
+        .auth-form form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Input fields styling */
+        .auth-form input {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        /* Submit button styling */
+        .auth-form button {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        /* Hover effect for the button */
+        .auth-form button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Links inside the form */
+        .auth-form a {
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        /* Hover effect for links */
+        .auth-form a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<noscript>
+    <p style="text-align: center; color: red;">This page requires JavaScript and CSS to function correctly. Please enable them in your browser settings.</p>
+</noscript>
+
+<div class="auth-form-container">
+    <div class="auth-form">
+        <h2>Sign Up</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }} <!-- Renders Django form fields dynamically -->
+            <button type="submit">Sign up</button>
+        </form>
+        <a href="{% url 'login' %}">Already have an account? Log in here</a>
+    </div>
+</div>
+
+</body>
+</html>

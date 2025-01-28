@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast and News</title>
+    {% load static %} 
+    <link rel="stylesheet" href="{% static 'forecast/styles.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- Include Leaflet.js CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 50%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #map {
+            height: 200px; /* Adjusted for better fit */
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #weatherResult, #news {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .news-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .news-item h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+
+        .news-item p {
+            margin: 0 0 10px 0;
+        }
+
+        #alert {
+            padding: 10px;
+            background-color: #ffeb3b;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        /* Ensure better mobile responsiveness */
+        @media screen and (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 10px;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #map {
+                height: 250px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            #map {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="{{ background_class }}">
+    <div class="container">
+        <h1>Weather Forecast and News</h1>
+        <form method="POST" id="cityForm">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="get_weather">Get Weather by City</button>
+        </form>
+
+        <!-- Live Location Button -->
+        <button type="button" id="liveLocationButton">Get Weather Using Live Location</button>
+        
+        <!-- Display Weather Data -->
+        {% if weather_data %}
+        <div id="weatherResult">
+            <h2>Temperature: {{ weather_data.temperature }} °C</h2>
+            <p>Weather: {{ weather_data.description }}</p>
+        </div>
+
+        <!-- Weather Map Section -->
+        <h2>Weather Map</h2>
+        <div id="map"></div> <!-- The map will be displayed here -->
+
+        <!-- Weather Map Logic -->
+        <script>
+            {% if map_data %}
+            const lat = {{ map_data.lat }};
+            const lon = {{ map_data.lon }};
+
+            // Initialize the map only if valid lat/lon are present
+            if (lat && lon) {
+                var map = L.map('map').setView([lat, lon], 10);
+
+                // Add OpenStreetMap tiles
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Define weather layers
+                var clouds = L.OWM.clouds({opacity: 0.5, legendImagePath: 'https://openweathermap.org/img/legend/legend.png'});
+                var precipitation = L.OWM.precipitation({opacity: 0.5});
+                var temperature = L.OWM.temperature({opacity: 0.5});
+                var wind = L.OWM.wind({opacity: 0.5});
+
+                // Add temperature layer by default
+                temperature.addTo(map);
+
+                // Add control to switch between different weather layers
+                var baseMaps = {
+                    "Clouds": clouds,
+                    "Precipitation": precipitation,
+                    "Temperature": temperature,
+                    "Wind": wind
+                };
+                L.control.layers(baseMaps).addTo(map);
+            } else {
+                console.error("Map data is missing or invalid.");
+            }
+            {% else %}
+            console.error("Map data is not available.");
+            {% endif %}
+        </script>
+        {% endif %}
+
+       
+
+        <!-- Display Weather News -->
+        {% if news_data %}
+        <h2>Weather News</h2>
+        <div id="news">
+            {% for article in news_data %}
+            <div class="news-item">
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.description }}</p>
+                <a href="{{ article.url }}" target="_blank">Read More</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+       <!-- Move the Get Weather News button below the map -->
+<a href="https://indianexpress.com/section/weather/" target="_blank">
+    <button type="button">Get Weather News</button>
+</a>
+        <!-- Alert Notification -->
+        {% if alert_message %}
+        <div id="alert">
+            <p>{{ alert_message }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Include Leaflet.js JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-openweathermap/leaflet-openweathermap.js"></script>
+
+    <!-- Geolocation Logic -->
+    <script>
+        document.getElementById('liveLocationButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    // Create a hidden form to submit latitude and longitude
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '';  // Submitting to the current URL
+                    const csrfToken = '{{ csrf_token }}'; // Add the CSRF token
+                    form.innerHTML = `
+                        <input type="hidden" name="latitude" value="${lat}">
+                        <input type="hidden" name="longitude" value="${lon}">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit(); // Submit the form to trigger a request
+                }, function(error) {
+                    alert("Error fetching live location. Please try again.");
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+    </script>
+</body>
+</html>
